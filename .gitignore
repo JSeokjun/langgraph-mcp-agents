@@ -7,7 +7,7 @@ wheels/
 *.egg-info
 
 # Virtual environments
-.venv
+mcp_test
 
 # Environment variables
 .env
@@ -17,3 +17,6 @@ wheels/
 
 # Data
 data/
+
+# Streamlit
+.streamlit/

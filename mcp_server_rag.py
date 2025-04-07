@@ -26,7 +26,7 @@ def create_retriever() -> Any:
     """
     # Step 1: Load Documents
     # PyMuPDFLoader is used to extract text from PDF files
-    loader = PyMuPDFLoader("data/sample.pdf")
+    loader = PyMuPDFLoader("data/InterviewX.pdf")
     docs = loader.load()
 
     # Step 2: Split Documents
