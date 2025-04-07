@@ -66,7 +66,7 @@ LANGSMITH_PROJECT=your_langsmith_project
 1. Streamlit 애플리케이션을 시작합니다.
 
 ```bash
-streamlit run app.py
+streamlit run app_KOR.py
 ```
 
 2. 애플리케이션이 브라우저에서 실행되어 메인 인터페이스를 표시합니다.
