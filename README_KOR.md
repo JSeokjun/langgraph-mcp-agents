@@ -1,6 +1,6 @@
 # LangGraph 에이전트 + MCP
 
-[![Korean](https://img.shields.io/badge/Language-한국어-red)](README.md)
+[![English](https://img.shields.io/badge/Language-English-blue)](README.md) [![Korean](https://img.shields.io/badge/Language-한국어-red)](README_KOR.md)
 
 [![GitHub](https://img.shields.io/badge/GitHub-langgraph--mcp--agents-black?logo=github)](https://github.com/teddylee777/langgraph-mcp-agents)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
@@ -32,12 +32,89 @@ MCP(Model Context Protocol)는 세 가지 주요 구성 요소로 이루어져 �
 
 3. **MCP 서버**: 표준화된 모델 컨텍스트 프로토콜을 통해 특정 기능을 노출하는 경량 프로그램으로, 주요 데이터 소스 역할을 합니다.
 
-## 설치
+## Docker 로 빠른 실행
+
+로컬 Python 환경을 설정하지 않고도 Docker를 사용하여 이 프로젝트를 쉽게 실행할 수 있습니다.
+
+### 필수 요구사항(Docker Desktop)
+
+아래의 링크에서 Docker Desktop을 설치합니다.
+
+- [Docker Desktop 설치](https://www.docker.com/products/docker-desktop/)
+
+### Docker Compose로 실행하기
+
+1. `dockers` 디렉토리로 이동
+
+```bash
+cd dockers
+```
+
+2. 프로젝트 루트 디렉토리에 API 키가 포함된 `.env` 파일 생성.
+
+```bash
+cp .env.example .env
+```
+
+발급 받은 API 키를 `.env` 파일에 입력합니다.
+
+(참고) 모든 API 키가 필요하지 않습니다. 필요한 경우에만 입력하세요.
+- `ANTHROPIC_API_KEY`: Anthropic API 키를 입력할 경우 "claude-3-7-sonnet-latest", "claude-3-5-sonnet-latest", "claude-3-haiku-latest" 모델을 사용합니다.
+- `OPENAI_API_KEY`: OpenAI API 키를 입력할 경우 "gpt-4o", "gpt-4o-mini" 모델을 사용합니다.
+- `LANGSMITH_API_KEY`: LangSmith API 키를 입력할 경우 LangSmith tracing을 사용합니다.
+
+```bash
+ANTHROPIC_API_KEY=your_anthropic_api_key
+OPENAI_API_KEY=your_openai_api_key
+LANGSMITH_API_KEY=your_langsmith_api_key
+LANGSMITH_PROJECT=LangGraph-MCP-Agents
+LANGSMITH_TRACING=true
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+```
+
+(신규 기능) 로그인/로그아웃 기능 사용
+
+로그인 기능을 사용시 `USE_LOGIN`을 `true`로 설정하고, `USER_ID`와 `USER_PASSWORD`를 입력합니다.
+
+```bash
+USE_LOGIN=true
+USER_ID=admin
+USER_PASSWORD=admin123
+```
+
+만약, 로그인 기능을 사용하고 싶지 않다면, `USE_LOGIN`을 `false`로 설정합니다.
+
+```bash
+USE_LOGIN=false
+```
+
+3. 시스템 아키텍처에 맞는 Docker Compose 파일 선택.
+
+**AMD64/x86_64 아키텍처(Intel/AMD 프로세서)**
+
+```bash
+# 컨테이너 실행
+docker compose -f docker-compose-KOR.yaml up -d
+```
+
+**ARM64 아키텍처(Apple Silicon M1/M2/M3/M4)**
+
+```bash
+# 컨테이너 실행
+docker compose -f docker-compose-KOR-mac.yaml up -d
+```
+
+4. 브라우저에서 http://localhost:8585 로 애플리케이션 접속
+
+(참고)
+- 포트나 다른 설정을 수정해야 하는 경우, 빌드 전에 해당 docker-compose-KOR.yaml 파일을 편집하세요.
+
+## 소스코드로 부터 직접 설치
 
 1. 이 저장소를 클론합니다
 
 ```bash
-git clone https://github.com/yourusername/langgraph-mcp-agents.git
+git clone https://github.com/teddynote-lab/langgraph-mcp-agents.git
 cd langgraph-mcp-agents
 ```
 
@@ -49,21 +126,47 @@ uv pip install -r requirements.txt
 source .venv/bin/activate  # Windows의 경우: .venv\Scripts\activate
 ```
 
-3. API 키가 포함된 `.env` 파일을 생성합니다(`.env.example`에서)
+3. API 키가 포함된 `.env` 파일을 생성합니다(`.env.example` 에서 복사)
+
+```bash
+cp .env.example .env
+```
+
+발급 받은 API 키를 `.env` 파일에 입력합니다.
+
+(참고) 모든 API 키가 필요하지 않습니다. 필요한 경우에만 입력하세요.
+- `ANTHROPIC_API_KEY`: Anthropic API 키를 입력할 경우 "claude-3-7-sonnet-latest", "claude-3-5-sonnet-latest", "claude-3-haiku-latest" 모델을 사용합니다.
+- `OPENAI_API_KEY`: OpenAI API 키를 입력할 경우 "gpt-4o", "gpt-4o-mini" 모델을 사용합니다.
+- `LANGSMITH_API_KEY`: LangSmith API 키를 입력할 경우 LangSmith tracing을 사용합니다.
 
 ```bash
 ANTHROPIC_API_KEY=your_anthropic_api_key
 OPENAI_API_KEY=your_openai_api_key(optional)
-TAVILY_API_KEY=your_tavily_api_key(optional)
+LANGSMITH_API_KEY=your_langsmith_api_key
+LANGSMITH_PROJECT=LangGraph-MCP-Agents
 LANGSMITH_TRACING=true
 LANGSMITH_ENDPOINT=https://api.smith.langchain.com
-LANGSMITH_API_KEY=your_langsmith_api_key
-LANGSMITH_PROJECT=your_langsmith_project
+```
+
+4. (신규 기능) 로그인/로그아웃 기능 사용
+
+로그인 기능을 사용시 `USE_LOGIN`을 `true`로 설정하고, `USER_ID`와 `USER_PASSWORD`를 입력합니다.
+
+```bash
+USE_LOGIN=true
+USER_ID=admin
+USER_PASSWORD=admin123
+```
+
+만약, 로그인 기능을 사용하고 싶지 않다면, `USE_LOGIN`을 `false`로 설정합니다.
+
+```bash
+USE_LOGIN=false
 ```
 
 ## 사용법
 
-1. Streamlit 애플리케이션을 시작합니다.
+1. Streamlit 애플리케이션을 시작합니다. (한국어 버전 파일은 `app_KOR.py` 입니다.)
 
 ```bash
 streamlit run app_KOR.py
@@ -103,7 +206,7 @@ streamlit run app_KOR.py
 
 개발자가 MCP와 LangGraph의 통합 작동 방식에 대해 더 깊이 알아보려면, 포괄적인 Jupyter 노트북 튜토리얼을 제공합니다:
 
-- 링크: [MCP-HandsOn.ipynb](./MCP-HandsOn.ipynb)
+- 링크: [MCP-HandsOn-KOR.ipynb](./MCP-HandsOn-KOR.ipynb)
 
 이 핸즈온 튜토리얼은 다음 내용을 다룹니다.
 
