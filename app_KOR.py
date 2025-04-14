@@ -18,8 +18,7 @@ if "event_loop" not in st.session_state:
     asyncio.set_event_loop(loop)
 
 from langgraph.prebuilt import create_react_agent
-from langchain_anthropic import ChatAnthropic
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
 from dotenv import load_dotenv
 from langchain_mcp_adapters.client import MultiServerMCPClient
@@ -184,11 +183,8 @@ Guidelines:
 """
 
 OUTPUT_TOKEN_INFO = {
-    "claude-3-5-sonnet-latest": {"max_tokens": 8192},
-    "claude-3-5-haiku-latest": {"max_tokens": 8192},
-    "claude-3-7-sonnet-latest": {"max_tokens": 64000},
-    "gpt-4o": {"max_tokens": 16000},
-    "gpt-4o-mini": {"max_tokens": 16000},
+    "gemini-2.0-flash": {"max_tokens": 8192},
+    "gemini-2.0-flash-lite": {"max_tokens": 4096},
 }
 
 # 세션 상태 초기화
@@ -198,7 +194,7 @@ if "session_initialized" not in st.session_state:
     st.session_state.history = []  # 대화 기록 저장 리스트
     st.session_state.mcp_client = None  # MCP 클라이언트 객체 저장 공간
     st.session_state.timeout_seconds = 120  # 응답 생성 제한 시간(초), 기본값 120초
-    st.session_state.selected_model = "claude-3-7-sonnet-latest"  # 기본 모델 선택
+    st.session_state.selected_model = "gemini-2.0-flash"  # 기본 모델 선택
     st.session_state.recursion_limit = 100  # 재귀 호출 제한, 기본값 100
 
 if "thread_id" not in st.session_state:
@@ -445,22 +441,13 @@ async def initialize_session(mcp_config=None):
         # 선택된 모델에 따라 적절한 모델 초기화
         selected_model = st.session_state.selected_model
 
-        if selected_model in [
-            "claude-3-7-sonnet-latest",
-            "claude-3-5-sonnet-latest",
-            "claude-3-5-haiku-latest",
-        ]:
-            model = ChatAnthropic(
-                model=selected_model,
-                temperature=0.1,
-                max_tokens=OUTPUT_TOKEN_INFO[selected_model]["max_tokens"],
-            )
-        else:  # OpenAI 모델 사용
-            model = ChatOpenAI(
-                model=selected_model,
-                temperature=0.1,
-                max_tokens=OUTPUT_TOKEN_INFO[selected_model]["max_tokens"],
-            )
+        model = ChatGoogleGenerativeAI(
+            model=selected_model,
+            temperature=0.1,
+            max_tokens=OUTPUT_TOKEN_INFO[selected_model]["max_tokens"],
+            convert_system_message_to_human=True,
+        )
+        
         agent = create_react_agent(
             model,
             tools,
@@ -480,41 +467,31 @@ with st.sidebar:
     # 사용 가능한 모델 목록 생성
     available_models = []
 
-    # Anthropic API 키 확인
-    has_anthropic_key = os.environ.get("ANTHROPIC_API_KEY") is not None
-    if has_anthropic_key:
-        available_models.extend(
-            [
-                "claude-3-7-sonnet-latest",
-                "claude-3-5-sonnet-latest",
-                "claude-3-5-haiku-latest",
-            ]
-        )
-
-    # OpenAI API 키 확인
-    has_openai_key = os.environ.get("OPENAI_API_KEY") is not None
-    if has_openai_key:
-        available_models.extend(["gpt-4o", "gpt-4o-mini"])
+    # Google API 키 확인
+    has_google_key = os.environ.get("GOOGLE_API_KEY") is not None
+    if has_google_key:
+        available_models.extend(["gemini-2.0-flash", "gemini-2.0-flash-lite"])
 
     # 사용 가능한 모델이 없는 경우 메시지 표시
     if not available_models:
         st.warning(
-            "⚠️ API 키가 설정되지 않았습니다. .env 파일에 ANTHROPIC_API_KEY 또는 OPENAI_API_KEY를 추가해주세요."
+            "⚠️ API 키가 설정되지 않았습니다. .env 파일에 GOOGLE_API_KEY를 추가해주세요."
         )
-        # 기본값으로 Claude 모델 추가 (키가 없어도 UI를 보여주기 위함)
-        available_models = ["claude-3-7-sonnet-latest"]
+        # 기본값으로 Gemini 모델 추가 (키가 없어도 UI를 보여주기 위함)
+        available_models = ["gemini-2.0-flash"]
 
     # 모델 선택 드롭다운
     previous_model = st.session_state.selected_model
+    
+    # 기존 selected_model이 available_models에 없는 경우 기본값으로 변경
+    if st.session_state.selected_model not in available_models:
+        st.session_state.selected_model = available_models[0]
+        
     st.session_state.selected_model = st.selectbox(
         "🤖 사용할 모델 선택",
         options=available_models,
-        index=(
-            available_models.index(st.session_state.selected_model)
-            if st.session_state.selected_model in available_models
-            else 0
-        ),
-        help="Anthropic 모델은 ANTHROPIC_API_KEY가, OpenAI 모델은 OPENAI_API_KEY가 환경변수로 설정되어야 합니다.",
+        index=available_models.index(st.session_state.selected_model),
+        help="Google Gemini 모델은 GOOGLE_API_KEY가 환경변수로 설정되어야 합니다.",
     )
 
     # 모델이 변경되었을 때 세션 초기화 필요 알림
